@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ride-service
+spec:
+  ports:
+    - port: 3004
+  selector:
+    app: ride-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ride-service
+spec:
+  selector:
+    matchLabels:
+      app: ride-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ride-service
+    spec:
+      containers:
+        - name: ride-service
+          image: muhammedrashi/ride-service:latest
+          ports:
+            - containerPort: 3004
+          envFrom:
+            - configMapRef:
+                name: app-config

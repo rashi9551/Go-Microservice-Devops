@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - go-network
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - go-network
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+
+  ride-service:
+    image: ride-service:latest
+    container_name: ride-service
+    ports:
+      - "${RIDE_PORT}:${RIDE_PORT}"
+    env_file:
+      - .env
+    networks:
+      - go-network
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  user-service:
+    image: user-service:latest
+    container_name: user-service
+    ports:
+      - "${USER_GRPC_PORT}:${USER_GRPC_PORT}"
+    env_file:
+      - .env
+    networks:
+      - go-network
+    depends_on:
+      - mongo
+
+  auth-service:
+    image: auth-service:latest
+    container_name: auth-service
+    ports:
+      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
+    env_file:
+      - .env
+    networks:
+      - go-network
+    depends_on:
+      - mongo
+
+  driver-service:
+    image: driver-service:latest
+    container_name: driver-service
+    ports:
+      - "${DRIVER_PORT}:${DRIVER_PORT}"
+    env_file:
+      - .env
+    networks:
+      - go-network
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  api-gateway:
+    image: api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    env_file:
+      - .env
+    networks:
+      - go-network
+    depends_on:
+      - rabbitmq
+
+volumes:
+  mongo-data:
+
+networks:
+  go-network:
+    name: go-network
+    driver: bridge
